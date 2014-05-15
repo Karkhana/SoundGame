@@ -25,7 +25,8 @@ void setup()
 
   in = minim.getLineIn(Minim.MONO, width, 44100, 16);
   fft = new FFT(in.bufferSize(), in.sampleRate());
-
+  fft.linAverages(128);
+  rectMode(CORNERS);
  
 }
 
@@ -75,14 +76,15 @@ void draw()
 /////// FFT ///////
  
   fft.forward(in.mix);
- 
-  stroke(255, 0, 0, 128);
+  stroke(255, 255, 0, 128);
+  fill(255,0,0,255);
+  int w = 5;
   for(int i = 0; i < fft.specSize(); i++)
   {
-    line(i*5, height, i*5, height - fft.getBand(i)*16);
+    rect(i*w, height, i*w + w, height - fft.getBand(i)*16);
   }
- 
- 
+
+
 }
 
 void stop()
