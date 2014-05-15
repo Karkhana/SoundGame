@@ -10,6 +10,10 @@ HighPassSP highpass;
 float highest=0;
 
 float previousHighest = 0;
+int sampleRate= 44100;  //we use a sapleRate of 44100Hz
+float [] max = new float [sampleRate/2];// (Half becaouse of Nyquist) This array will be filled with amplitude values.float maximum; //the maximum amplitude of the max array
+float maximum; //the maximum amplitude of the max array
+float frequency; //the frequency in hertz
 
 void setup()
 {
@@ -18,7 +22,7 @@ void setup()
 
   minim = new Minim(this);
 
-  in = minim.getLineIn(Minim.MONO, width, 44100, 16);
+  in = minim.getLineIn(Minim.MONO, width, sampleRate, 16);
   
   fft = new FFT(in.bufferSize(), in.sampleRate());
   fft.linAverages(128);
@@ -36,6 +40,13 @@ void draw()
   strokeWeight(2);
   fill(255,255,255,255);
   
+  findNote(); //find note function
+  // textSize(50); //size of the text
+  text (frequency-6+" Hz", 150, 80);//display the frequency in hertz
+  int y = (int)((frequency-6)/8.6+50);
+
+  line (y, 0, y, 400);
+
   line(0,200,width,201); //x-axis
   line(1,0,2,height); //y-axis
   rectangle(((2*width)/3),20,((2*width)/3)+200,100); //info box
@@ -148,6 +159,21 @@ void mousePressed()
    {
      previousHighest = 0.0;
    }
+}
+
+void findNote() {
+
+  fft.forward(in.left);
+  for (int f=0;f<in.sampleRate()/2;f++) { //analyses the amplitude of each frequency analysed, between 0 and 22050 hertz
+    max[f]=fft.getFreq(float(f)); //each index is correspondent to a frequency and contains the amplitude value 
+  }
+  maximum=max(max);//get the maximum value of the max array in order to find the peak of volume
+
+  for (int i=0; i<max.length; i++) {// read each frequency in order to compare with the peak of volume
+    if (max[i] == maximum) {//if the value is equal to the amplitude of the peak, get the index of the array, which corresponds to the frequency
+      frequency= i;
+    }
+  }
 }
 
 
