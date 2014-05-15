@@ -11,15 +11,17 @@
 
 import ddf.minim.*;
 import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
 
 Minim minim;
 AudioInput in;
 FFT fft;
+HighPassSP highpass;
 float highest=0;
 
 void setup()
 {
-  size(1024, 400, P2D);
+  size(1024, 400, P2D);   // P2D, P3D, OPENGL
 
   minim = new Minim(this);
 
@@ -27,6 +29,8 @@ void setup()
   fft = new FFT(in.bufferSize(), in.sampleRate());
   fft.linAverages(128);
   rectMode(CORNERS);
+  highpass = new HighPassSP(120, in.sampleRate());
+  in.addEffect(highpass);
  
 }
 
@@ -77,11 +81,11 @@ void draw()
  
   fft.forward(in.mix);
   stroke(255, 255, 0, 128);
-  fill(255,0,0,255);
+  fill(255,255,0,255);
   int w = 5;
   for(int i = 0; i < fft.specSize(); i++)
   {
-    rect(i*w, height, i*w + w, height - fft.getBand(i)*16);
+    rect(50+i*w, height, 51+i*w + w, height - fft.getBand(i)*16);
   }
 
 
