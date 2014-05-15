@@ -1,13 +1,3 @@
-/**
-  * This sketch demonstrates how to monitor the currently active audio input 
-  * of the computer using an <code>AudioInput</code>. What you will actually 
-  * be monitoring depends on the current settings of the machine the sketch is running on. 
-  * Typically, you will be monitoring the built-in microphone, but if running on a desktop
-  * its feasible that the user may have the actual audio output of the computer 
-  * as the active audio input, or something else entirely.
-  * <p>
-  * When you run your sketch as an applet you will need to sign it in order to get an input. 
-  */
 
 import ddf.minim.*;
 import ddf.minim.analysis.*;
@@ -17,28 +7,35 @@ AudioInput in;
 FFT fft;
 float highest=0;
 
+float previousHighest = 0;
+
 void setup()
 {
-  size(1024, 400, P2D);
+  size(1024, 400, OPENGL);
 
   minim = new Minim(this);
 
   in = minim.getLineIn(Minim.MONO, width, 44100, 16);
+  
   fft = new FFT(in.bufferSize(), in.sampleRate());
   fft.linAverages(128);
   rectMode(CORNERS);
- 
 }
 
 void draw()
 {
   background(0);
-  stroke(128);
+  stroke(128,128,128);
   strokeWeight(2);
+  fill(255,255,255,255);
   
   line(0,200,width,201); //x-axis
   line(1,0,2,height); //y-axis
   rectangle(((2*width)/3),20,((2*width)/3)+200,100); //info box
+  
+  ///////////////////////////////////////////////////////////////
+  //       AXIS LINES AND GRID VALUE FOR POSITIVE Y-AXIS       //
+  ///////////////////////////////////////////////////////////////
   
   int counter = 0;
   for(int i=180;i>=20;i-=20)
@@ -48,7 +45,9 @@ void draw()
     text((300/10)*counter,15,i+5);
   }
 
-  //negative y-axis next part
+  ///////////////////////////////////////////////////////////////
+  //       AXIS LINES AND GRID VALUE FOR NEGATIVE Y-AXIS       //
+  ///////////////////////////////////////////////////////////////
   counter = 0;
   for(int i=220;i<=380;i+=20)
   {
@@ -57,34 +56,66 @@ void draw()
     text("-"+(300/10)*counter,15,i+5);
   }
   
-  stroke(255);
+  stroke(255,255,255); //white stroke
   
+  ///////////////////////////////////////////////////////////////
+  //       WAVEFORM OF ANALOGUE VALUE FROM MICROPHONE          //
+  ///////////////////////////////////////////////////////////////
    for (int i = 0; i < in.bufferSize() - 1; i++)
    {
+     float micValue = in.left.get(i);
+     float nextMicValue = in.left.get(i+1);
+     
      smooth();
      
-     if(in.left.get(i)>highest)
-      highest = in.left.get(i);
+     if(micValue>highest || nextMicValue>highest) //find the highest amplitude in a frame and store it
+      {  
+        highest = (micValue>nextMicValue)?micValue:nextMicValue;
+        
+        if(previousHighest<highest)
+         {
+           previousHighest=highest+0.003333;
+         }
+        
+      }
       
-     line(i, 200 + in.left.get(i)*300, i+1, 200 + in.left.get(i+1)*300);
+     line(i, 200 + micValue*300, i+1, 200 + nextMicValue*300);
    }
-   stroke(128);
-   text("Highest Amplitude per frame : "+(int)(highest*300),2*width/3+10,35); //text message
-   stroke(255);
+   
+   stroke(128,128,128);                                                       //grey stroke
+   text("Highest Amplitude per frame : "+(int)(highest*300),2*width/3+10,35); //display amplitude value in a box
+   text("Push Amplitude: "+(int)(previousHighest*300),2*width/3+10,60);       //display amplitude value in a box
+   int barLevel = 200-(int)(200*previousHighest);
+   
+   if(barLevel<=100)
+     stroke(255,0,0);
+   else
+    stroke(0,255,0);
+    
+   line(0,barLevel,width,barLevel);
+    
    highest = 0.0;
-
-/////// FFT ///////
+   
+   
+   /////// FFT ///////
  
   fft.forward(in.mix);
   stroke(255, 255, 0, 128);
   fill(255,0,0,255);
   int w = 5;
+  int maxFFT = 0;
+  
   for(int i = 0; i < fft.specSize(); i++)
   {
     rect(i*w, height, i*w + w, height - fft.getBand(i)*16);
+    if((height-fft.getBand(i)*16)>maxFFT)
+     {
+      // maxFFT = 
+     }
+     
+     //line(
   }
-
-
+  
 }
 
 void stop()
@@ -103,4 +134,13 @@ void rectangle(int x1,int y1,int x2,int y2)
   line(x1,y1,x1,y2);
   line(x2,y1,x2,y2);
 }
+
+void mousePressed()
+{
+  //if(mouseX>=width-100 && mouseY>=height-100)
+   {
+     previousHighest = 0.0;
+   }
+}
+
 
