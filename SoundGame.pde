@@ -14,7 +14,7 @@ import ddf.minim.analysis.*;
 
 Minim minim;
 AudioInput in;
-//FFT fft;
+FFT fft;
 float highest=0;
 
 void setup()
@@ -24,6 +24,8 @@ void setup()
   minim = new Minim(this);
 
   in = minim.getLineIn(Minim.MONO, width, 44100, 16);
+  fft = new FFT(in.bufferSize(), in.sampleRate());
+
  
 }
 
@@ -69,7 +71,18 @@ void draw()
    text("Highest Amplitude per frame : "+(int)(highest*300),2*width/3+10,35); //text message
    stroke(255);
    highest = 0.0;
-  
+
+/////// FFT ///////
+ 
+  fft.forward(in.mix);
+ 
+  stroke(255, 0, 0, 128);
+  for(int i = 0; i < fft.specSize(); i++)
+  {
+    line(i*5, height, i*5, height - fft.getBand(i)*16);
+  }
+ 
+ 
 }
 
 void stop()
